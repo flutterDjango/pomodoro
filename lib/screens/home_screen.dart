@@ -28,6 +28,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Duration pomodoroTimeEntered = const Duration(minutes: 0);
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery.of(context).size.width;
     var settingDuration = context.watch<PomodoroDurationCubit>();
     (settingDuration.state != '')
         ? pomodoroTimeEntered =
@@ -48,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Column(
                 children: [
                   const PomodoroDurationInput(),
-                  const SizedBox(height: 25),
+                  SizedBox(height: screenHeight * 0.05),
                   CircularPercentIndicator(
                     radius: 110.0,
                     lineWidth: 15.0,
@@ -57,30 +59,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     center: Text(
                       _secondToFormatedString(pomodoroTime.inSeconds),
                       style:
-                          TextStyle(fontSize: 40, color: colorScheme.onPrimary),
+                          TextStyle(fontSize: 35, color: colorScheme.onPrimary),
                     ),
                     progressColor: statusDescription[pomodoroStatus]![1],
                   ),
-                  const SizedBox(height: 30),
+                  SizedBox(height: screenHeight * 0.04),
                   Text(
                     statusDescription[pomodoroStatus]![0],
                     style: TextStyle(
                         fontSize: 25,
                         color: Theme.of(context).colorScheme.onPrimary),
                   ),
-                  const SizedBox(height: 35),
+                  SizedBox(height: screenHeight * 0.05),
                   SizedBox(
-                    height: 50,
-                    width: 145,
+                    height: screenHeight * 0.06,
+                    width: screenWidth * 0.45,
                     child: ElevatedButton(
                       onPressed: _startPomodoroCountdown,
                       child: Text(_btnStart),
                     ),
                   ),
-                  const SizedBox(height: 15),
+                  SizedBox(height: screenHeight * 0.02),
                   SizedBox(
-                    height: 50,
-                    width: 145,
+                    height: screenHeight * 0.06,
+                    width: screenWidth * 0.45,
                     child: ElevatedButton(
                       onPressed: resetTimer,
                       child: const Text('Reset'),
@@ -97,13 +99,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _startPomodoroCountdown() {
     if (pomodoroTimeEntered.inSeconds != 0) {
-      countdownTimer =
-          Timer.periodic(const Duration(seconds: 1), (_) => setCountDown());
-      setState(() {
-        pomodoroStatus = PomodoroStatus.runingPomodoro;
-        pomodoroTime = pomodoroTimeEntered;
-        _btnStart = 'Running';
-      });
+      if (_btnStart == 'Start') {
+        countdownTimer =
+            Timer.periodic(const Duration(seconds: 1), (_) => setCountDown());
+        setState(() {
+          pomodoroStatus = PomodoroStatus.runingPomodoro;
+          pomodoroTime = pomodoroTimeEntered;
+          _btnStart = 'Running';
+        });
+      }
     }
   }
 
@@ -142,7 +146,10 @@ class _HomeScreenState extends State<HomeScreen> {
 String _secondToFormatedString(int seconds) {
   String remainingSecondsFormated = '';
   String remainingMinutesFormated = '';
-  int nbMinutes = seconds ~/ 60;
+  String remainingHoursFormated = '';
+  String timeString = "";
+  int nbHours = seconds ~/ 3600;
+  int nbMinutes = (seconds - nbHours * 3600) ~/ 60;
   int nbSeconds = seconds % 60;
   (nbSeconds < 10)
       ? remainingSecondsFormated = '0$nbSeconds'
@@ -151,5 +158,16 @@ String _secondToFormatedString(int seconds) {
       ? remainingMinutesFormated = '0$nbMinutes'
       : remainingMinutesFormated = nbMinutes.toString();
 
-  return '$remainingMinutesFormated : $remainingSecondsFormated';
+  (nbHours == 0)
+      ? {
+          remainingHoursFormated = '',
+          timeString = '$remainingMinutesFormated : $remainingSecondsFormated'
+        }
+      : {
+          remainingHoursFormated = nbHours.toString(),
+          timeString =
+              '$remainingHoursFormated : $remainingMinutesFormated : $remainingSecondsFormated'
+        };
+
+  return timeString;
 }
